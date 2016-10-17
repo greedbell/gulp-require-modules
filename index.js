@@ -86,7 +86,7 @@ function transformFile(from, to, modulesDirectory) {
       transformFile(modulePath, targetPath, modulesDirectory);
     }
     // var relativePath = path.relative(targetPath, to);
-    var relativePath = path.relative(to, targetPath);
+    var relativePath = path_util.relativePath(to, targetPath);
     // console.log('transformFile:module: ' + module);
     // console.log('transformFile:targetPath: ' + targetPath);
     // console.log('transformFile:relativePath: ' + relativePath);
@@ -137,6 +137,7 @@ function plugin(npmroot, opts) {
     if (file.isBuffer()) {
       var modulesDirectory = path.join(process.cwd(), opts.modulesDirectory);
       var manifestPath = path.join(process.cwd(), opts.manifestPath);
+      var distDirectory = opts.distDirectory;
 
       // get old manifest
       if (fs.existsSync(manifestPath)) {
@@ -153,31 +154,37 @@ function plugin(npmroot, opts) {
       for (var index in modules) {
         var module = modules[index];
 
-        if (manifest.hasOwnProperty(module)) {
-          continue;
-        }
-
         var modulePath = path_util.modulePath(module, node_modules);
         // console.log('modulePath: ' + modulePath);
         if (modulePath === null) {
           continue;
         }
 
-        var targetPath = path_util.targetPath(modulePath, node_modules, modulesDirectory);
-        var relativePath = path.relative(process.cwd(), targetPath);
-        manifest[module] = relativePath;
-        transformedArray.push(module);
+        if (!manifest.hasOwnProperty(module)) {
+          var targetPath = path_util.targetPath(modulePath, node_modules, modulesDirectory);
+          var relativePath = path.relative(process.cwd(), targetPath);
+          manifest[module] = relativePath;
+          transformedArray.push(module);
 
-        if (!fs.existsSync(targetPath)) {
-          transformFile(modulePath, targetPath, modulesDirectory);
+          if (!fs.existsSync(targetPath)) {
+            transformFile(modulePath, targetPath, modulesDirectory);
+          }
         }
 
         if (opts.replace) { // replace modules with path
-          var dirname = path.dirname(filePath);
-          var relativePath = path.relative(dirname, targetPath);
+          var distFilePath = filePath;
+          if (distDirectory) {
+            var relativePath = path.relative(process.cwd(), filePath);
+            var distFilePath = path.join(process.cwd(), distDirectory, relativePath);
+          }
+          var dirname = path.dirname(distFilePath);
+          var relativePath = path_util.relativePath(dirname, targetPath);
+          // relativePath = path.join('./', relativePath);
+          console.log('distFilePath: ' + distFilePath);
+          console.log('relativePath: ' + relativePath);
           // var re = /require\(['"]( + module + )['"]\)/ig;
           var re = eval('\/require\\\(\[\'\"\]' + module + '\[\'\"\]\\\)\/ig');
-          contents = contents.replace(re, 'require(\'' + relativePath + '\')');
+          contents = contents.replace(re, 'require(\'\.\/' + relativePath + '\')');
           // console.log(contents);
         }
       }

@@ -74,8 +74,21 @@ function targetPath(fromPath, basePath, targetDirectory) {
   return path.resolve(targetDirectory, relativePath);
 }
 
+function relativePath(from, to) {
+  var relative = path.relative(from, to);
+  if (!relative || relative.length < 1) {
+    return relative;
+  }
+  var first = relative.substr(0, 1);
+  if (first !== '.' && first !== '/') {
+    relative = './' + relative;
+  }
+  return relative;
+}
+
 module.exports = {
   modulePath: modulePath,
   requirePath: requirePath,
-  targetPath: targetPath
+  targetPath: targetPath,
+  relativePath: relativePath
 };

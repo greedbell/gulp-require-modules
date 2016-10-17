@@ -10,6 +10,8 @@ $ npm install --save-dev gulp-require-modules
 
 ## Usage
 
+### no replace
+
 ```
 var gulp = require('gulp');
 var requireModules = require('gulp-require-modules');
@@ -25,7 +27,25 @@ this will:
 
 * copy required modules in `node_modules` to `dist/npm`
 * save manifest to file `dist/require-modules.json`
-* replace `require(modules)` to `require('./dist/npm/module/index.js')`.
+
+### replace
+
+```
+var gulp = require('gulp');
+var requireModules = require('gulp-require-modules');
+var dist = 'dist';
+gulp.task('default', function () {
+    return gulp.src('src/*.js')
+        .pipe(requireModules({replace: true, distDirectory: dist))
+        .pipe(gulp.dest(dist));
+});
+```
+
+this will:
+
+* copy required modules in `node_modules` to `dist/npm`
+* save manifest to file `dist/require-modules.json`
+* replace `require(modules)` to `require('./npm/module/index.js')`.
 
 ## API
 
@@ -44,6 +64,10 @@ path of manifest file
 replace: `boolean` Default: `false`
 
 whether replace require path
+
+distDirectory: `string` Default: `null`
+
+the directory where input file will be saved to. if `null`, the input file will not be moved.
 
 ## Require
 
