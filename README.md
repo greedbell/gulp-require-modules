@@ -36,7 +36,7 @@ var requireModules = require('gulp-require-modules');
 var dist = 'dist';
 gulp.task('default', function () {
     return gulp.src('src/*.js')
-        .pipe(requireModules({dist: true, distDirectory: dist}))
+        .pipe(requireModules({dist: true, fromDirectory:'src', distDirectory: dist}))
         .pipe(gulp.dest(dist));
 });
 ```
@@ -68,6 +68,10 @@ whether the requires in the file will be modified to new path.
 distDirectory: `string` Default: `'dist'`
 
 the directory where input file will be disted to. if `null`, the requires of the file will not be modified.
+
+fromDirectory: `string` Default: `'src'`
+
+the directory where input file is from. if `null`, use process.cwd
 
 ## Require
 

@@ -3,19 +3,29 @@ var path = require('path');
 
 function realRequirPath(filePath) {
   // console.log('realRequirPath:filePath: ' + filePath);
+  var jsFilePath = filePath + '.js';
   if (fs.existsSync(filePath)) {
     if (fs.statSync(filePath).isDirectory()) {
-      filePath = path.join(filePath, 'index.js');
-      // console.log('realRequirPath:filePath: ' + filePath);
+      jsFilePath = filePath + '.js';
+      if (fs.existsSync(jsFilePath)) {
+        return jsFilePath;
+      } else {
+        jsFilePath = path.join(filePath, 'index.js');
+      }
+      // console.log('realRequirPath:jsFilePath: ' + jsFilePath);
+    } else if (fs.statSync(filePath).isFile()) {
+      return filePath;
+    } else {
+      return null;
     }
   } else {
-    filePath += '.js';
+    jsFilePath = filePath + '.js';
     // console.log('realRequirPath:filePath: ' + filePath);
   }
 
-  if (fs.existsSync(filePath)) {
+  if (fs.existsSync(jsFilePath)) {
     // console.log('realRequirPath:filePath: ' + filePath);
-    return filePath;
+    return jsFilePath;
   } else {
     return null;
   }
@@ -82,7 +92,7 @@ function relativePath(from, to) {
     return relative;
   }
   var first = relative.substr(0, 1);
-  if (first !== '.' || first !== '/') {
+  if (first !== '.' && first !== '/') {
     relative = './' + relative;
   }
   return relative;

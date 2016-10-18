@@ -118,14 +118,16 @@ function transformFile(from, to, modulesDirectory) {
 }
 
 // plugin level function (dealing with files)
-function plugin(npmroot, opts) {
+function plugin(opts) {
   opts = objectAssign({
     modulesDirectory: 'dist/node_modules',
     modulesManifestPath: 'dist/require-modules.json',
     dist: true,
+    fromDirectory: 'src',
     distDirectory: 'dist'
   }, opts);
 
+  // console.log('opts: ' , opts);
   return through.obj(function (file, enc, cb) {
     if (file.isStream()) {
       this.emit('error', new PluginError(PLUGIN_NAME, 'Streams are not supported!'));
@@ -152,9 +154,13 @@ function plugin(npmroot, opts) {
       // the path where this file will be disted to
       var distFilePath = filePath;
       if (distDirectory) {
-        var relativePath = path.relative(process.cwd(), filePath);
+        var cwd = path.join(process.cwd());
+        var relativePath = path.relative(path.join(cwd, opts.fromDirectory || ''), filePath);
         var distFilePath = path.join(process.cwd(), distDirectory, relativePath);
       }
+      // console.log('distDirectory: ' + distDirectory);
+      // console.log('relativePath: ' + relativePath);
+      // console.log('distFilePath: ' + distFilePath);
       var distFileDirname = path.dirname(distFilePath);
       // console.log('distFileDirname: ' + distFileDirname);
 

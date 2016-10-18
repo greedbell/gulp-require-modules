@@ -32,10 +32,10 @@ describe('gulp-require-modules', function() {
   it('dist', function(done) {
 
     // 读取伪文件
-    var fakeFile = vinylFile.readSync('./index.js');
+    var fakeFile = vinylFile.readSync('./test/index.test.js');
 
     // 创建一个 prefixer 流（stream）
-    var myRequireModules = requireModules({dist: true, distDirectory: 'dist'});
+    var myRequireModules = requireModules({dist: true, distDirectory: 'dist', fromDirectory: 'test'});
 
     // 将伪文件写入
     myRequireModules.write(fakeFile);
