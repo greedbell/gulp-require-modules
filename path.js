@@ -82,7 +82,7 @@ function relativePath(from, to) {
     return relative;
   }
   var first = relative.substr(0, 1);
-  if (first !== '.' && first !== '/') {
+  if (first !== '.' || first !== '/') {
     relative = './' + relative;
   }
   return relative;
