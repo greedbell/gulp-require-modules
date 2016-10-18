@@ -18,8 +18,8 @@ var requireModules = require('gulp-require-modules');
 
 gulp.task('default', function () {
     return gulp.src('src/*.js')
-        .pipe(requireModules())
-        .pipe(gulp.dest('dist'));
+        .pipe(requireModules(dist: false))
+        .pipe(gulp.dest());
 });
 ```
 
@@ -43,7 +43,7 @@ gulp.task('default', function () {
 
 this will:
 
-* copy required modules in `node_modules` to `dist/npm`
+* copy required modules in `node_modules` to `dist/node_modules`
 * save manifest to file `dist/require-modules.json`
 * replace `require(modules)` to `require('./npm/module/index.js')`.
 
@@ -53,21 +53,21 @@ this will:
 
 #### options
 
-modulesDirectory: `string` Default: `'dist/npm'`
+modulesDirectory: `string` Default: `'dist/node_modules'`
 
 the new directory for modules
 
-manifestPath: `string` Default: `'dist/require-modules.json'`
+modulesManifestPath: `string` Default: `'dist/require-modules.json'`
 
 path of manifest file
 
-replace: `boolean` Default: `false`
+dist: `boolean` Default: `true`
 
-whether replace require path
+whether the requires in the file will be modified to new path.
 
-distDirectory: `string` Default: `null`
+distDirectory: `string` Default: `'dist'`
 
-the directory where input file will be saved to. if `null`, the input file will not be moved.
+the directory where input file will be disted to. if `null`, the requires of the file will not be modified.
 
 ## Require
 

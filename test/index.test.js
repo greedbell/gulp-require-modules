@@ -10,13 +10,13 @@ var path = require('path');
 var vinylFile = require('vinyl-file');
 
 describe('gulp-require-modules', function() {
-  it('should work in buffer mode', function(done) {
+  it('no dist', function(done) {
 
     // 读取伪文件
     var fakeFile = vinylFile.readSync('./index.js');
 
     // 创建一个 prefixer 流（stream）
-    var myRequireModules = requireModules();
+    var myRequireModules = requireModules({dist: false});
 
     // 将伪文件写入
     myRequireModules.write(fakeFile);
@@ -29,13 +29,13 @@ describe('gulp-require-modules', function() {
     });
   });
 
-  it('replace input buffer', function(done) {
+  it('dist', function(done) {
 
     // 读取伪文件
     var fakeFile = vinylFile.readSync('./index.js');
 
     // 创建一个 prefixer 流（stream）
-    var myRequireModules = requireModules({replace: true, distDirectory: 'dist'});
+    var myRequireModules = requireModules({dist: true, distDirectory: 'dist'});
 
     // 将伪文件写入
     myRequireModules.write(fakeFile);

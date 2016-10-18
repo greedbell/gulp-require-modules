@@ -75,6 +75,8 @@ function targetPath(fromPath, basePath, targetDirectory) {
 }
 
 function relativePath(from, to) {
+  // console.log('relativePath:from: ' + from);
+  // console.log('relativePath:to: ' + to);
   var relative = path.relative(from, to);
   if (!relative || relative.length < 1) {
     return relative;

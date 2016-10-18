@@ -10,11 +10,10 @@ var path = require('path');
 var path_util = require('./path');
 var PluginError = gutil.PluginError;
 
-// consts
 var PLUGIN_NAME = 'gulp-require-modules';
 var node_modules = process.cwd() + '/node_modules/';
-var manifest = {};
-var transformedArray = [];
+var modulesManifest = {};
+var requiresManifest = {};
 
 /**
  * require(./require
@@ -61,34 +60,31 @@ function getMatches(str, re) {
 function transformFile(from, to, modulesDirectory) {
   // console.log('from: ' + from);
   // console.log('to: ' + to);
-  // return;
   var contents = fs.readFileSync(from, 'utf8');
 
   // modules
   var modules = getModules(contents);
   for (var index in modules) {
     var module = modules[index];
-    // console.log('transformFile:manifest: ' + Object.keys(manifest));
+    // console.log('transformFile:modulesManifest: ' + Object.keys(modulesManifest));
     // console.log('transformFile:module: ' + module);
-    // console.log('transformFile:manifest:module: ' + manifest[module]);
+    // console.log('transformFile:modulesManifest:module: ' + modulesManifest[module]);
 
-    if (transformedArray.indexOf(module) > 0) {
+    if (modulesManifest.hasOwnProperty(module)) {
       continue;
-    } else {
-      transformedArray.push(module);
     }
     var modulePath = path_util.modulePath(module, node_modules);
     if (modulePath === null) {
       continue;
     }
     var targetPath = path_util.targetPath(modulePath, node_modules, modulesDirectory);
+    // console.log('transformFile:targetPath: ' + targetPath);
+    modulesManifest[module] = path.relative(process.cwd(), targetPath);
     if (!fs.existsSync(targetPath)) {
       transformFile(modulePath, targetPath, modulesDirectory);
     }
-    // var relativePath = path.relative(targetPath, to);
-    var relativePath = path_util.relativePath(to, targetPath);
     // console.log('transformFile:module: ' + module);
-    // console.log('transformFile:targetPath: ' + targetPath);
+    var relativePath = path_util.relativePath(to, targetPath);
     // console.log('transformFile:relativePath: ' + relativePath);
     // console.log('transformFile:to: ' + to);
     var re = eval('\/require\\\(\[\'\"\]' + module + '\[\'\"\]\\\)\/ig');
@@ -100,15 +96,15 @@ function transformFile(from, to, modulesDirectory) {
   var requires = getRequires(contents);
   for (var index in requires) {
     var require = requires[index];
-    if (transformedArray.indexOf(require) > 0) {
-      continue;
-    } else {
-      transformedArray.push(require);
-    }
     var requirePath = path_util.requirePath(from, require);
     // console.log('requirePath: ' + requirePath);
     if (requirePath === null) {
       continue;
+    }
+    if (requiresManifest.hasOwnProperty(requirePath)) {
+      continue;
+    } else {
+      requiresManifest[requirePath] = true;
     }
     var targetPath = path_util.targetPath(requirePath, node_modules, modulesDirectory);
     if (!fs.existsSync(targetPath)) {
@@ -124,9 +120,10 @@ function transformFile(from, to, modulesDirectory) {
 // plugin level function (dealing with files)
 function plugin(npmroot, opts) {
   opts = objectAssign({
-    modulesDirectory: 'dist/npm',
-    manifestPath: 'dist/require-modules.json',
-    replace: false
+    modulesDirectory: 'dist/node_modules',
+    modulesManifestPath: 'dist/require-modules.json',
+    dist: true,
+    distDirectory: 'dist'
   }, opts);
 
   return through.obj(function (file, enc, cb) {
@@ -136,21 +133,31 @@ function plugin(npmroot, opts) {
     }
     if (file.isBuffer()) {
       var modulesDirectory = path.join(process.cwd(), opts.modulesDirectory);
-      var manifestPath = path.join(process.cwd(), opts.manifestPath);
+      var modulesManifestPath = path.join(process.cwd(), opts.modulesManifestPath);
       var distDirectory = opts.distDirectory;
 
-      // get old manifest
-      if (fs.existsSync(manifestPath)) {
-        var data = fs.readFileSync(manifestPath, 'utf8');
-        manifest = JSON.parse(data);
+      // get old modulesManifest
+      if (fs.existsSync(modulesManifestPath)) {
+        var data = fs.readFileSync(modulesManifestPath, 'utf8');
+        modulesManifest = JSON.parse(data);
       } else {
-        dirname = path.dirname(manifestPath);
+        dirname = path.dirname(modulesManifestPath);
         fs.mkdirsSync(dirname);
       }
 
       var filePath = file.path;
       var contents = file.contents.toString();
       var modules = getModules(contents);
+
+      // the path where this file will be disted to
+      var distFilePath = filePath;
+      if (distDirectory) {
+        var relativePath = path.relative(process.cwd(), filePath);
+        var distFilePath = path.join(process.cwd(), distDirectory, relativePath);
+      }
+      var distFileDirname = path.dirname(distFilePath);
+      // console.log('distFileDirname: ' + distFileDirname);
+
       for (var index in modules) {
         var module = modules[index];
 
@@ -160,27 +167,22 @@ function plugin(npmroot, opts) {
           continue;
         }
 
-        if (!manifest.hasOwnProperty(module)) {
-          var targetPath = path_util.targetPath(modulePath, node_modules, modulesDirectory);
+        var targetPath = path_util.targetPath(modulePath, node_modules, modulesDirectory);
+        // console.log('targetPath: ' + targetPath);
+
+        if (!modulesManifest.hasOwnProperty(module)) {
           var relativePath = path.relative(process.cwd(), targetPath);
-          manifest[module] = relativePath;
-          transformedArray.push(module);
+          modulesManifest[module] = relativePath;
 
           if (!fs.existsSync(targetPath)) {
             transformFile(modulePath, targetPath, modulesDirectory);
           }
         }
 
-        if (opts.replace) { // replace modules with path
-          var distFilePath = filePath;
-          if (distDirectory) {
-            var relativePath = path.relative(process.cwd(), filePath);
-            var distFilePath = path.join(process.cwd(), distDirectory, relativePath);
-          }
-          var dirname = path.dirname(distFilePath);
-          var relativePath = path_util.relativePath(dirname, targetPath);
+        if (opts.dist) { // replace modules with path
+          var relativePath = path_util.relativePath(distFileDirname, targetPath);
           // relativePath = path.join('./', relativePath);
-          console.log('distFilePath: ' + distFilePath);
+          // console.log('distFilePath: ' + distFilePath);
           console.log('relativePath: ' + relativePath);
           // var re = /require\(['"]( + module + )['"]\)/ig;
           var re = eval('\/require\\\(\[\'\"\]' + module + '\[\'\"\]\\\)\/ig');
@@ -189,10 +191,10 @@ function plugin(npmroot, opts) {
         }
       }
       file.contents = Buffer.from(contents);
-      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+      fs.writeFileSync(modulesManifestPath, JSON.stringify(modulesManifest, null, 2), 'utf8');
     }
 
-    // 确保文件进入下一个 gulp 插件
+    // go to next gulp plugin
     this.push(file);
     cb();
   });
