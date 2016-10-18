@@ -36,7 +36,7 @@ var requireModules = require('gulp-require-modules');
 var dist = 'dist';
 gulp.task('default', function () {
     return gulp.src('src/*.js')
-        .pipe(requireModules({replace: true, distDirectory: dist))
+        .pipe(requireModules({dist: true, distDirectory: dist))
         .pipe(gulp.dest(dist));
 });
 ```
