@@ -189,10 +189,10 @@ function plugin(opts) {
           var relativePath = path_util.relativePath(distFileDirname, targetPath);
           // relativePath = path.join('./', relativePath);
           // console.log('distFilePath: ' + distFilePath);
-          console.log('relativePath: ' + relativePath);
+          // console.log('relativePath: ' + relativePath);
           // var re = /require\(['"]( + module + )['"]\)/ig;
           var re = eval('\/require\\\(\[\'\"\]' + module + '\[\'\"\]\\\)\/ig');
-          contents = contents.replace(re, 'require(\'\.\/' + relativePath + '\')');
+          contents = contents.replace(re, 'require(\'' + relativePath + '\')');
           // console.log(contents);
         }
       }
