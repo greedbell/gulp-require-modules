@@ -8,6 +8,8 @@ var requireModules = require('../index');
 var assert = require('assert');
 var path = require('path');
 var vinylFile = require('vinyl-file');
+var testSubMobile = require('gulp-util/lib/log');
+var testSubMobile2 = require('ini/ini');
 
 describe('gulp-require-modules', function() {
   it('no dist', function(done) {
@@ -33,6 +35,7 @@ describe('gulp-require-modules', function() {
 
     // 读取伪文件
     var fakeFile = vinylFile.readSync('./test/index.test.js');
+    // var fakeFile = vinylFile.readSync('./index.js');
 
     // 创建一个 prefixer 流（stream）
     var myRequireModules = requireModules({dist: true, distDirectory: 'dist', fromDirectory: 'test'});

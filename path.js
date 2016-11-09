@@ -32,6 +32,26 @@ function realRequirPath(filePath) {
 }
 
 /**
+ * get the full path of subModule
+ *
+ * @param subModule subModule
+ * @returns {*} /User/XXXX/node_modules/module/relative.js
+ */
+function subModulePath(subModule, node_modules) {
+  var index = subModule.indexOf("/");
+  var length = subModule.length;
+  if (index <= 0 || index + 1 == length) {
+    return null;
+  }
+  var module = subModule.substring(0, index);
+  var relative = subModule.substring(index + 1, length);
+
+  var moduleDirectory = path.join(node_modules, module);
+  var filePath = path.join(moduleDirectory, relative);
+  return realRequirPath(filePath);
+}
+
+/**
  * get required module full path
  *
  * @param module module
@@ -100,6 +120,7 @@ function relativePath(from, to) {
 
 module.exports = {
   modulePath: modulePath,
+  subModulePath: subModulePath,
   requirePath: requirePath,
   targetPath: targetPath,
   relativePath: relativePath

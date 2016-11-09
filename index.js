@@ -5,6 +5,8 @@
 var through = require('through2');
 var gutil = require('gulp-util');
 var objectAssign = require('object-assign');
+var testSubMobile = require('gulp-util/lib/log');
+var testSubMobile2 = require('ini/ini');
 var fs = require('fs-extra');
 var path = require('path');
 var path_util = require('./path');
@@ -16,7 +18,7 @@ var modulesManifest = {};
 var requiresManifest = {};
 
 /**
- * require(./require
+ * require("./path/to/require")
  * @param file
  * @returns {*}
  */
@@ -26,12 +28,23 @@ function getRequires(string) {
 }
 
 /**
- * require(module)
+ * require("module")
  * @param file
  * @returns {*}
  */
 function getModules(string) {
   var re = /require\(['"]([\w\d\-]+)['"]\)/ig;
+  return getMatches(string, re);
+}
+
+/**
+ * require("module/subModule")
+ * @param file
+ * @returns {*}
+ */
+function getSubModules(string) {
+  // var re = /require\(['"]([\w\d\-]+[\/]+[\w\d\-\.\/]+]+)['"]\)/ig;
+  var re = /require\(['"]([\w\d\-]+\/[\w\d\-\.\/]+)['"]\)/ig;
   return getMatches(string, re);
 }
 
@@ -52,9 +65,9 @@ function getMatches(str, re) {
 }
 
 /**
- * copy file is node_module to modulesDirectory
- * @param from
- * @param to
+ * copy file from node_module to modulesDirectory
+ * @param from file full path
+ * @param to file full path
  * @param modulesDirectory
  */
 function transformFile(from, to, modulesDirectory) {
@@ -111,6 +124,7 @@ function transformFile(from, to, modulesDirectory) {
       transformFile(requirePath, targetPath, modulesDirectory);
     }
   }
+
   var dirname = path.dirname(to);
   // console.log('dirname: ' + dirname);
   fs.mkdirsSync(dirname);
@@ -149,7 +163,6 @@ function plugin(opts) {
 
       var filePath = file.path;
       var contents = file.contents.toString();
-      var modules = getModules(contents);
 
       // the path where this file will be disted to
       var distFilePath = filePath;
@@ -164,14 +177,17 @@ function plugin(opts) {
       var distFileDirname = path.dirname(distFilePath);
       // console.log('distFileDirname: ' + distFileDirname);
 
+      // modules
+      var modules = getModules(contents);
       for (var index in modules) {
         var module = modules[index];
+        // console.log('module: ' + module);
 
         var modulePath = path_util.modulePath(module, node_modules);
-        // console.log('modulePath: ' + modulePath);
         if (modulePath === null) {
           continue;
         }
+        // console.log('modulePath: ' + modulePath);
 
         var targetPath = path_util.targetPath(modulePath, node_modules, modulesDirectory);
         // console.log('targetPath: ' + targetPath);
@@ -193,9 +209,49 @@ function plugin(opts) {
           // var re = /require\(['"]( + module + )['"]\)/ig;
           var re = eval('\/require\\\(\[\'\"\]' + module + '\[\'\"\]\\\)\/ig');
           contents = contents.replace(re, 'require(\'' + relativePath + '\')');
-          // console.log(contents);
         }
       }
+      // console.log(contents);
+
+      // subModules
+      var subModules = getSubModules(contents);
+      for (var index in subModules) {
+        var subModule = subModules[index];
+        // console.log('subModule: ' + subModule);
+        var subModulePath = path_util.subModulePath(subModule, node_modules);
+        if (subModulePath === null) {
+          continue;
+        }
+        // console.log('subModulePath: ' + subModulePath);
+
+        var targetPath = path_util.targetPath(subModulePath, node_modules, modulesDirectory);
+        // console.log('targetPath: ' + targetPath);
+
+        if (!modulesManifest.hasOwnProperty(subModule)) {
+          var relativePath = path.relative(process.cwd(), targetPath);
+          modulesManifest[subModule] = relativePath;
+
+          if (!fs.existsSync(targetPath)) {
+            transformFile(subModulePath, targetPath, modulesDirectory);
+          }
+        }
+
+        if (opts.dist) { // replace modules with path
+          var relativePath = path_util.relativePath(distFileDirname, targetPath);
+          // relativePath = path.join('./', relativePath);
+          // console.log('distFilePath: ' + distFilePath);
+          // console.log('relativePath: ' + relativePath);
+          // var re = /require\(['"]( + module + )['"]\)/ig;
+          var subModuleRegex = subModule.replace('/', '\\\/');
+          var subModuleRegex = subModuleRegex.replace('.', '\\\.');
+          var re = 'require\\\(\[\'\"\]' + subModuleRegex + '\[\'\"\]\\\)';
+          // console.log('re: ' + re);
+          var regex = new RegExp(re, 'ig');
+          // console.log('regex: ' + regex);
+          contents = contents.replace(regex, 'require(\'' + relativePath + '\')');
+        }
+      }
+      // console.log(contents);
       file.contents = Buffer.from(contents);
       fs.writeFileSync(modulesManifestPath, JSON.stringify(modulesManifest, null, 2), 'utf8');
     }

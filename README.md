@@ -81,7 +81,4 @@ the directory where input file is from. if `null`, use process.cwd
 * `require('./module/file')`
 * `require('./module/file.js')`
 * `require('./module/folder')`
-
-### not support
-
 * `require('readable-stream/transform')`
