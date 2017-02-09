@@ -1,6 +1,6 @@
 {
   "name": "gulp-require-modules",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "move required modules in node_modules to a new folder",
   "main": "index.js",
   "scripts": {

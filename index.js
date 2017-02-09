@@ -19,6 +19,7 @@ var requiresManifest = {};
 
 /**
  * require("./path/to/require")
+ *
  * @param file
  * @returns {*}
  */
@@ -29,6 +30,7 @@ function getRequires(string) {
 
 /**
  * require("module")
+ *
  * @param file
  * @returns {*}
  */
@@ -39,6 +41,7 @@ function getModules(string) {
 
 /**
  * require("module/subModule")
+ *
  * @param file
  * @returns {*}
  */
@@ -48,6 +51,13 @@ function getSubModules(string) {
   return getMatches(string, re);
 }
 
+/**
+ * get mateched string
+ *
+ * @param str
+ * @param re
+ * @returns {*}
+ */
 function getMatches(str, re) {
   if (str == null) {
     return null;
@@ -66,6 +76,7 @@ function getMatches(str, re) {
 
 /**
  * copy file from node_module to modulesDirectory
+ *
  * @param from file full path
  * @param to file full path
  * @param modulesDirectory

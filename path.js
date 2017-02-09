@@ -1,6 +1,14 @@
 var fs = require('fs');
 var path = require('path');
 
+/**
+ * get real required file path
+ *
+ * module to module.js or module/index.js
+ *
+ * @param filePath
+ * @returns {*}
+ */
 function realRequirPath(filePath) {
   // console.log('realRequirPath:filePath: ' + filePath);
   var jsFilePath = filePath + '.js';
@@ -104,6 +112,13 @@ function targetPath(fromPath, basePath, targetDirectory) {
   return path.resolve(targetDirectory, relativePath);
 }
 
+/**
+ * get relative path
+ *
+ * @param from
+ * @param to
+ * @returns {*}
+ */
 function relativePath(from, to) {
   // console.log('relativePath:from: ' + from);
   // console.log('relativePath:to: ' + to);
@@ -115,6 +130,10 @@ function relativePath(from, to) {
   if (first !== '.' && first !== '/') {
     relative = './' + relative;
   }
+
+  // especially used for windows
+  relative = relative.replace('\\', '/');
+
   return relative;
 }
 
