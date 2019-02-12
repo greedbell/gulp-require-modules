@@ -32,6 +32,7 @@
   "devDependencies": {
     "assert": "^1.4.1",
     "gulp": "^3.9.1",
-    "mocha": "^3.1.2"
+    "mocha": "^3.1.2",
+    "vinyl-file": "^3.0.0"
   }
 }
