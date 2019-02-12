@@ -3,14 +3,13 @@
  */
 
 var through = require('through2');
-var gutil = require('gulp-util');
 var objectAssign = require('object-assign');
 var testSubMobile = require('gulp-util/lib/log');
 var testSubMobile2 = require('ini/ini');
 var fs = require('fs-extra');
 var path = require('path');
 var path_util = require('./path');
-var PluginError = gutil.PluginError;
+var PluginError = require('plugin-error');
 
 var PLUGIN_NAME = 'gulp-require-modules';
 var node_modules = process.cwd() + '/node_modules/';
