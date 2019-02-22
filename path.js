@@ -132,7 +132,7 @@ function relativePath(from, to) {
   }
 
   // especially used for windows
-  relative = relative.replace('\\', '/');
+  relative = relative.split(path.sep).join('/');
 
   return relative;
 }
